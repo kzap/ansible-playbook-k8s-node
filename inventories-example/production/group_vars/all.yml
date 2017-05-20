@@ -1,0 +1,70 @@
+---
+# Variables listed here are applicable to all host groups
+
+## Ansible SSH Connection Information
+
+# Variables here are for when first_run is true and setting up the server for the first time
+# New server: Default SSH user
+first_run_remote_user: root
+# New server: Default SSH port
+first_run_remote_port: 22
+# New server: If we should use sudo/su
+first_run_become: false
+
+#  These are the regular SSH conncetion variables
+#   Main admin SSH user
+remote_user: admin
+#   Main SSH port
+remote_port: 2222
+#   If we should use sudo/su
+become: true
+
+## RedHat Only Extra Repo
+# Installs the IUS or REMI Repo
+ius_or_remi: "IUS"
+
+## OS Packages
+# Installs packages for your OS
+# if you do not want to install the default packages, set all_os_packages to an empty object array []
+#all_os_packages: []
+all_os_extra_packages: []
+
+## willshersystems.users role
+# Documentation: https://github.com/willshersystems/ansible-users/blob/master/README.md
+# Make sure passwords you put here are encrypted using passlib:
+# $ python -c "from passlib.hash import sha512_crypt; print sha512_crypt.encrypt('YOUR_PLAINTEXT_PASSWORD')"
+
+users:
+  - name: admin
+    comment: "Your Admin User"
+    # Set encrypted password
+    password: "!!"
+    # If has sudo/su access
+    is_admin: true
+
+users_ssh_keys:
+  - name: admin
+    # The public keys for this admin user on your local drive, the private key will be used after server is setup
+    keys:
+      - "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+## willshersystems.sshd role
+# Documentation: https://github.com/willshersystems/ansible-sshd/blob/master/README.md
+sshd:
+  Compression: true
+  ListenAddress:
+    - "0.0.0.0"
+    - "::"
+  # no more logging in as root after initial setup
+  PermitRootLogin: false
+  Port:
+    - 22 # Your new server default SSH port
+    - 2222 # Your main SSH port since we will block the default SSH port via the Firewall
+  PasswordAuthentication: false
+
+## geerlingguy.firewall role
+# Documentation: https://github.com/geerlingguy/ansible-role-firewall/blob/master/README.md
+# All Servers have these firewall ports opened, gets merged with firewall ports in other group settings
+all_firewall_allowed_tcp_ports:
+  - "2222" # Your main SSH port since we will block the default SSH port via the Firewall
+all_firewall_additional_rules: []

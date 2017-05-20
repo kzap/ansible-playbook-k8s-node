@@ -1,0 +1,10 @@
+#.retry files
+*.retry
+
+# inventories directory
+!inventories/
+inventories/*
+!inventories/.gitkeep
+
+# ansible galaxy roles
+galaxy-roles/

@@ -1,0 +1,27 @@
+---
+# This playbook deploys the whole LAMP stack and secures it
+- name: "Initial Local Setup"
+  hosts: all
+  gather_facts: False
+  tasks:
+    - name: "Set SSH Connection Variables"
+      set_fact:
+        ansible_user: "{{ remote_user | default('root') }}"
+        ansible_port: "{{ remote_port | default('22') }}"
+        ansible_become: "{{ become | default(false) }}"
+      tags: "local::init"
+
+- name: "Secure Server: Lock down firewall"
+  hosts: all
+  pre_tasks:
+    - name: "Merge the Firewall Ports"
+      set_fact:
+        merged_firewall_allowed_tcp_ports: "{{ all_firewall_allowed_tcp_ports | default([]) }}"
+        merged_firewall_additional_rules: "{{ all_firewall_additional_rules | default([]) }}"
+      tags: "firewall"
+
+  roles:
+    - role: "galaxy-roles/ansible-role-firewall"
+      firewall_allowed_tcp_ports: "{{ merged_firewall_allowed_tcp_ports | default([]) | unique }}"
+      firewall_additional_rules: "{{ merged_firewall_additional_rules | default([]) }}"
+      tags: "firewall"
